@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Feeding & Growth</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F7FA;color:#1a2332}
+:root{--navy:#0F2B3C;--teal:#0D9488;--accent:#2563EB;--green:#059669;--red:#DC2626;--amber:#D97706;--gray:#6B7280;--lt:#F0F2F5;--white:#FFFFFF;--border:#E2E6EC}
+
+.app{display:flex;flex-direction:column;min-height:100vh}
+.header{background:var(--navy);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
+.header-logo{font-weight:700;font-size:15px}
+.header-right{display:flex;align-items:center;gap:10px}
+.header-farm{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:5px 10px;font-size:11px;color:#ccd;font-family:inherit}
+.header-avatar{width:28px;height:28px;border-radius:50%;background:#1a5276;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#8cb4d4}
+
+.body-wrap{display:flex;flex:1}
+.sidebar{width:200px;background:var(--white);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;display:flex;flex-direction:column}
+.snav{display:flex;align-items:center;gap:8px;padding:10px 18px;font-size:13px;font-weight:500;color:var(--gray);cursor:pointer;border-left:3px solid transparent}
+.snav:hover{background:#f8f9fa;color:var(--navy)}
+.snav.active{background:#eef4f8;color:var(--navy);border-left-color:var(--navy);font-weight:600}
+.snav svg{width:16px;height:16px;flex-shrink:0}
+.sidebar-ver{margin-top:auto;padding:14px 18px;font-size:10px;color:#ccc}
+
+.main{flex:1;padding:20px 24px;overflow-y:auto}
+.pg-title{font-size:22px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.pg-sub{font-size:12px;color:var(--gray);margin-bottom:16px}
+.notice{display:flex;align-items:flex-start;gap:8px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:9px 12px;font-size:11px;color:#92400e;margin-bottom:16px}
+.notice b{color:#78350f}
+
+/* Tabs */
+.tabs{display:inline-flex;gap:6px;background:#eef1f4;border-radius:9px;padding:4px;margin-bottom:18px}
+.tab{display:flex;align-items:center;gap:7px;border:none;background:transparent;padding:8px 16px;font-size:13px;font-family:inherit;font-weight:600;color:var(--gray);cursor:pointer;border-radius:7px}
+.tab.active{background:var(--white);color:var(--navy);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tab svg{width:15px;height:15px}
+.tabpane{display:none}
+.tabpane.active{display:block}
+
+/* Calendar toolbar */
+.cal-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{border:1px solid var(--border);background:var(--white);border-radius:16px;padding:5px 13px;font-size:12px;font-family:inherit;color:var(--gray);cursor:pointer;font-weight:500}
+.pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.month-nav{display:flex;align-items:center;gap:10px}
+.month-nav button{border:1px solid var(--border);background:var(--white);width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:15px;color:var(--navy)}
+.month-nav button:hover{background:#f0f2f5}
+.month-label{font-size:15px;font-weight:700;color:var(--navy);min-width:130px;text-align:center}
+.cal-toolbar-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.month-nav select{cursor:pointer}
+.btn-import{display:flex;align-items:center;gap:6px;background:var(--white);border:1px solid var(--navy);color:var(--navy);border-radius:7px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600}
+.btn-import:hover{background:var(--navy);color:#fff}
+.btn-import svg{width:14px;height:14px}
+.imp-body{padding:16px 18px;overflow-y:auto}
+.imp-step{margin-bottom:18px}
+.imp-h{font-size:13px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.imp-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font-size:11px}
+.imp-c{font-size:12px;color:var(--gray);line-height:1.6}
+.imp-drop{border:2px dashed var(--border);border-radius:10px;padding:22px;text-align:center;font-size:13px;color:var(--navy);cursor:pointer;background:#fafbfc}
+.imp-drop:hover{border-color:var(--teal);background:#f0fdf9}
+.imp-drop-sub{font-size:11px;color:var(--gray);margin-top:4px;font-weight:400}
+.imp-summary{font-size:12px;font-weight:600;color:var(--navy);margin-bottom:8px}
+.imp-table td,.imp-table th{font-size:12px}
+.imp-table tr.bad td{background:#fef2f2}
+.imp-note{font-size:11px;color:var(--gray);margin-top:8px}
+.st-ok{color:var(--green);font-weight:600}
+.st-err{color:var(--red);font-weight:600}
+
+/* Calendar grid */
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+.cal-head div{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--gray);padding:4px 8px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-cell{min-height:84px;border:1px solid var(--border);border-radius:8px;background:var(--white);padding:6px 8px;cursor:pointer;display:flex;flex-direction:column;transition:box-shadow .12s}
+.cal-cell:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.cal-cell.empty-cell{background:transparent;border:none;cursor:default;box-shadow:none}
+.cal-cell.future{background:#fafbfc;color:#c3c9d0;cursor:default}
+.cal-cell.future:hover{box-shadow:none}
+.cal-cell.has{background:#f0fdf9;border-color:#99f6e4}
+.cal-cell.today{outline:2px solid var(--accent);outline-offset:-1px}
+.cal-day-num{font-size:12px;font-weight:600;color:var(--gray)}
+.cal-cell.has .cal-day-num{color:var(--navy)}
+.cal-body{margin-top:auto;text-align:center;padding-bottom:2px}
+.cal-kg{font-size:16px;font-weight:700;color:var(--teal)}
+.cal-sub{font-size:10px;color:var(--gray);margin-top:1px}
+.cal-hint{font-size:11px;color:var(--gray);margin-top:12px}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(15,43,60,.45);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:40px 16px}
+.overlay.open{display:flex}
+.dialog{background:var(--white);border-radius:12px;width:100%;max-width:880px;box-shadow:0 20px 50px rgba(0,0,0,.25);max-height:86vh;display:flex;flex-direction:column}
+.dialog-hdr{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 18px;border-bottom:1px solid var(--border)}
+.dialog-title{font-size:16px;font-weight:700;color:var(--navy)}
+.dialog-desc{font-size:11px;color:var(--gray);margin-top:2px}
+.dialog-x{border:none;background:none;font-size:20px;color:var(--gray);cursor:pointer;line-height:1}
+.dialog-body{display:flex;gap:16px;padding:16px 18px;overflow:hidden;flex:1;min-height:260px}
+.pond-list{width:230px;flex-shrink:0;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
+.dialog-body.single-pond .pond-list{display:none}
+.pond-item{border:1px solid var(--border);background:#f8fafb;border-radius:8px;padding:9px 11px;text-align:left;cursor:pointer;font-family:inherit}
+.pond-item:hover{background:#f0f2f5}
+.pond-item.active{border-color:var(--teal);background:#ecfdf7}
+.pond-item-name{font-size:13px;font-weight:600;color:var(--navy)}
+.pond-item-meta{font-size:11px;color:var(--gray);margin-top:3px;display:flex;justify-content:space-between;align-items:center}
+.pond-badge{background:#d9ead3;color:#274e13;border:1px solid #6aa84f;border-radius:10px;padding:1px 8px;font-size:10px;font-weight:600}
+.pond-badge.zero{background:#f3f4f6;color:#9ca3af;border-color:#e5e7eb}
+.detail{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.detail-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.detail-hdr h4{font-size:13px;color:var(--navy)}
+.btn-add{display:flex;align-items:center;gap:5px;background:var(--navy);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer}
+.btn-add:hover{background:#1a3d52}
+.ftable{width:100%;border-collapse:collapse}
+.ftable th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--gray);padding:6px 8px;border-bottom:1px solid var(--border)}
+.ftable td{padding:6px 8px;border-bottom:1px solid #f3f4f6}
+.ftable input,.ftable select{border:1px solid var(--border);border-radius:5px;padding:5px 7px;font-size:12px;font-family:inherit;width:100%}
+.ftable input.amt{width:74px;text-align:right}
+.ftable input.tm{width:78px}
+.btn-del{border:1px solid #fecaca;background:#fef2f2;color:var(--red);border-radius:5px;padding:4px 9px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600}
+.detail-foot{margin-top:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-top:1px dashed var(--border);padding-top:10px}
+.daily-total{font-size:13px;color:var(--navy);font-weight:700}
+.bio-field{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--navy)}
+.bio-field input{border:1px solid var(--border);border-radius:6px;padding:6px 9px;font-size:12px;font-family:inherit;width:90px;text-align:right}
+.empty-detail{font-size:13px;color:var(--gray);padding:20px;text-align:center}
+.feed-form{display:flex;flex-direction:column;gap:12px;max-width:300px}
+.ff{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--navy);font-weight:600}
+.ff select,.ff input{border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;font-family:inherit;font-weight:400}
+.cyc-marks{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.cyc-chip{font-size:9px;font-weight:700;border-radius:8px;padding:1px 6px;white-space:nowrap}
+.cyc-chip.start{background:#d1fae5;color:#065f46}
+.cyc-chip.end{background:#fef3c7;color:#92400e}
+.cycle-bio{margin-top:14px;border-top:1px dashed var(--border);padding-top:12px}
+.cycle-bio-label{font-size:12px;font-weight:700;margin-bottom:8px}
+.cycle-bio.start .cycle-bio-label{color:#065f46}
+.cycle-bio.end .cycle-bio-label{color:#92400e}
+.cycle-bio-row{display:flex;align-items:center;gap:10px}
+.cycle-bio-row input{border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;font-family:inherit;width:120px;text-align:right}
+.cycle-bio-note{font-size:11px;color:var(--gray)}
+.tx-block{margin-top:14px;border-top:1px dashed var(--border);padding-top:12px}
+.tx-block-label{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:7px}
+.tx-badges{display:flex;flex-wrap:wrap;gap:6px}
+.tx-badge{font-size:11px;font-weight:600;border:1px solid;border-radius:12px;padding:3px 10px}
+.tx-none{font-size:11px;color:var(--gray)}
+.tl-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.tl-summary{font-size:11px;color:var(--gray)}
+.tl-axis{display:flex;margin-bottom:3px}
+.tl-axis-spacer{width:96px;flex-shrink:0}
+.tl-axis-ticks{flex:1;position:relative;height:14px;font-size:9px;color:var(--gray)}
+.tl-axis-ticks .tl-tick{position:absolute;transform:translateX(-50%)}
+.tl{border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.tl-row{display:flex;border-bottom:1px solid #f3f4f6}
+.tl-row:last-child{border-bottom:none}
+.tl-label{width:96px;flex-shrink:0;padding:8px 10px;font-size:12px;font-weight:600;color:var(--navy);background:#f8f9fb;border-right:1px solid var(--border);display:flex;align-items:center}
+.tl-track{flex:1;position:relative;padding:6px 0}
+.tl-lane{position:relative;height:22px;margin:2px 0}
+.tl-bar{position:absolute;top:0;height:20px;border-radius:4px;color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;padding:0 7px;overflow:hidden;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.tl-legend{display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--gray);align-items:center;flex-wrap:wrap}
+.tl-dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
+.tl-note{color:#9aa3ad}
+.co{border:1px solid var(--border);border-radius:8px}
+.co-row{display:flex;border-bottom:1px solid #f3f4f6}
+.co-row:last-child{border-bottom:none}
+.co-label{width:96px;flex-shrink:0;padding:8px 10px;font-size:12px;font-weight:600;color:var(--navy);background:#f8f9fb;border-right:1px solid var(--border);display:flex;align-items:center}
+.co-track{flex:1;position:relative;padding:6px 0;min-height:32px}
+.co-bar{position:absolute;top:6px;height:20px;border-radius:4px;color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;padding:0 8px;white-space:nowrap;cursor:default}
+.co-bar.ongoing{color:#374151}
+.co-card{display:none;position:absolute;bottom:27px;left:0;z-index:30;width:216px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 30px rgba(15,43,60,.22);overflow:hidden;font-weight:400}
+.co-bar:hover .co-card{display:block}
+.cc-head{color:#fff;font-size:11px;font-weight:700;padding:7px 12px}
+.cc-body{padding:7px 12px 10px}
+.cc-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0;border-bottom:1px solid #f3f4f6}
+.cc-row:last-child{border-bottom:none}
+.cc-row span{color:var(--gray)}
+.cc-row b{color:var(--navy);font-weight:600}
+.cc-row.cc-fcr{margin-top:3px;padding-top:6px;border-top:1px solid var(--border);border-bottom:none}
+.cc-row.cc-fcr b{color:var(--teal);font-size:14px}
+.cc-note{font-size:11px;color:var(--gray);margin-top:6px;line-height:1.5}
+.dialog-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border)}
+.btn-ghost{border:1px solid var(--border);background:var(--white);border-radius:7px;padding:8px 16px;font-size:12px;font-family:inherit;font-weight:600;color:var(--navy);cursor:pointer}
+.btn-primary{border:none;background:var(--teal);color:#fff;border-radius:7px;padding:8px 16px;font-size:12px;font-family:inherit;font-weight:600;cursor:pointer}
+
+/* Dashboard */
+.dash-toolbar{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.f-group{display:flex;flex-direction:column;gap:4px}
+.f-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gray)}
+.f-select{border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:inherit;background:#fafafa;color:var(--navy)}
+.dash-note{font-size:11px;color:var(--gray);align-self:center;margin-top:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.kpi.fcr{background:#eef6ff;border-color:#bfdbfe}
+.kpi.feed{background:#f0fdf9;border-color:#99f6e4}
+.kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--gray);margin-bottom:7px}
+.kpi-big{font-size:24px;font-weight:700;color:var(--navy)}
+.kpi-unit{font-size:12px;color:var(--gray);font-weight:600;margin-left:3px}
+.kpi-sub{font-size:11px;color:var(--gray);margin-top:5px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:16px}
+.card-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:10px}
+.chart-wrap{position:relative;height:230px}
+.foot{font-size:10px;color:var(--gray);line-height:1.6;margin-top:18px;border-top:1px solid var(--border);padding-top:12px}
+
+/* Configuration tab */
+.cfg-hdr{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px;gap:12px;flex-wrap:wrap}
+.cfg-title{font-size:15px;font-weight:700;color:var(--navy)}
+.cfg-sub{font-size:11px;color:var(--gray);margin-top:2px}
+.cfg-table{width:100%;border-collapse:collapse;background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.cfg-table th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--gray);padding:10px 14px;background:#f8f9fb;border-bottom:1px solid var(--border)}
+.cfg-table td{padding:9px 14px;border-bottom:1px solid #f3f4f6}
+.cfg-table tr:last-child td{border-bottom:none}
+.cfg-table input[type=text],.cfg-table input[type=number]{border:1px solid var(--border);border-radius:6px;padding:6px 9px;font-size:13px;font-family:inherit;color:var(--navy)}
+.cfg-table input.cfg-name{width:190px}
+.cfg-table input.cfg-num{width:90px;text-align:right}
+.switch{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--gray)}
+
+@media(max-width:900px){.sidebar{display:none}.charts{grid-template-columns:1fr}.pond-list{width:170px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-logo">AquaShield</div>
+    <div class="header-right"><span class="header-farm">AquaTech Farms ▾</span><span class="header-avatar">TN</span></div>
+  </div>
+
+  <div class="body-wrap">
+    <div class="sidebar">
+      <div class="snav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Overview</div>
+      <div class="snav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg> Digital Twin</div>
+      <div class="snav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Real-time &amp; Forecast</div>
+      <div class="snav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-4 4"/></svg> Historical Data</div>
+      <div class="snav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg> Pond Comparison</div>
+      <div class="snav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> Energy Consumption</div>
+      <div class="snav active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg> Feeding &amp; Growth</div>
+      <div class="sidebar-ver">v1.0.0</div>
+    </div>
+
+    <div class="main">
+      <div class="pg-title">Feeding &amp; Growth</div>
+      <div class="pg-sub">Log feed per pond each day, and turn it into growth &amp; efficiency insight — feed is ~60% of farming cost.</div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Calendar</button>
+        <button class="tab" data-tab="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Dashboard</button>
+        <button class="tab" data-tab="config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Configuration</button>
+      </div>
+      <div class="tabpane active" id="tab-calendar">
+        <div class="cal-toolbar">
+          <div class="pills" id="pondPills"></div>
+          <div class="cal-toolbar-right">
+            <button class="btn-import" id="importBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import feed</button>
+            <div class="month-nav">
+              <button id="prevMonth">‹</button>
+              <select class="f-select" id="monthSel"></select>
+              <select class="f-select" id="yearSel"></select>
+              <button id="nextMonth">›</button>
+            </div>
+          </div>
+        </div>
+        <div class="cal-head"><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div></div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-hint">Each day shows total feed across ponds (or the selected pond). Click any day to add / edit / delete feed entries per pond.</div>
+      </div>
+      <div class="tabpane" id="tab-dashboard">
+        <div class="dash-toolbar">
+          <div class="f-group"><span class="f-label">Scope</span>
+            <select class="f-select" id="dashScope"></select>
+          </div>
+          <span class="dash-note">June 2026</span>
+        </div>
+        <div class="kpis" id="dashKpis"></div>
+        <div class="charts">
+          <div class="card"><div class="card-title">Daily Feed (kg)</div><div class="chart-wrap"><canvas id="feedChart"></canvas></div></div>
+          <div class="card"><div class="card-title">Biomass vs Cumulative Feed (kg)</div><div class="chart-wrap"><canvas id="bioChart"></canvas></div></div>
+        </div>
+        <div class="charts" style="margin-top:16px">
+          <div class="card" style="margin:0">
+            <div class="tl-hdr"><span class="card-title" style="margin:0">Cycle Outcomes</span><span class="tl-summary" id="coAgg"></span></div>
+            <div class="tl-axis" id="coAxis"></div>
+            <div class="co" id="coBody"></div>
+            <div class="tl-legend"><span><span class="tl-dot" style="background:#059669"></span>Completed</span><span><span class="tl-dot" style="background:#9ca3af"></span>Ongoing / not recorded</span><span class="tl-note">hover a bar for details</span></div>
+          </div>
+          <div class="card" style="margin:0">
+            <div class="tl-hdr"><span class="card-title" style="margin:0">Treatments</span></div>
+            <div class="tl-axis" id="tlAxis"></div>
+            <div class="tl" id="tlBody"></div>
+            <div class="tl-legend" id="tlLegend"></div>
+          </div>
+        </div>
+      </div>
+      <div class="tabpane" id="tab-config">
+        <div class="cfg-hdr">
+          <div><div class="cfg-title">Feed Types</div><div class="cfg-sub">Defined per project. These populate the feed-type dropdown when logging feed on the calendar.</div></div>
+          <button class="btn-add" id="addFeedType">+ Add feed type</button>
+        </div>
+        <table class="cfg-table">
+          <thead><tr><th>Feed type</th><th>Kg</th><th>Price (S$)</th><th>Active</th><th></th></tr></thead>
+          <tbody id="cfgBody"></tbody>
+        </table>
+        <div class="cal-hint">Enter each feed's purchase <b>Kg</b> and <b>Price</b> (as on the bag/invoice); the dashboard derives cost from them. The calendar dropdown shows only <b>Active</b> types.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="dayModal">
+  <div class="dialog">
+    <div class="dialog-hdr">
+      <div><div class="dialog-title" id="modalTitle">Feeding — </div><div class="dialog-desc">Pick a pond on the left, then add / edit / delete its feed entries.</div></div>
+      <button class="dialog-x" id="modalClose">×</button>
+    </div>
+    <div class="dialog-body">
+      <div class="pond-list" id="modalPonds"></div>
+      <div class="detail" id="modalDetail"></div>
+    </div>
+    <div class="dialog-foot">
+      <button class="btn-ghost" id="modalCancel">Close</button>
+      <button class="btn-primary" id="modalSave">Save</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="importModal">
+  <div class="dialog" style="max-width:780px">
+    <div class="dialog-hdr">
+      <div><div class="dialog-title">Import feed (Excel)</div><div class="dialog-desc">Bulk-enter a month of feed — a daily amounts grid + a feed schedule.</div></div>
+      <button class="dialog-x" id="importClose">×</button>
+    </div>
+    <div class="imp-body">
+      <div class="imp-step">
+        <div class="imp-h"><span class="imp-num">1</span> Download the template</div>
+        <div class="imp-c">Pre-filled with your ponds &amp; the selected month. Fill the <b>Feed (kg)</b> grid and set <b>Feed Schedule</b> (feed type · From · To).<br><button class="btn-primary" id="dlTemplate" style="margin-top:8px">⬇ Download template (.xlsx)</button></div>
+      </div>
+      <div class="imp-step">
+        <div class="imp-h"><span class="imp-num">2</span> Upload your filled file</div>
+        <div class="imp-drop" id="impDrop"><b>Drag .xlsx here</b> or <u>browse</u><div class="imp-drop-sub">nothing is saved until you confirm the preview</div></div>
+      </div>
+      <div class="imp-step" id="impStep3" style="display:none">
+        <div class="imp-h"><span class="imp-num">3</span> Preview &amp; confirm</div>
+        <div class="imp-summary" id="impSummary"></div>
+        <table class="t imp-table"><thead><tr><th>Date</th><th>Pond</th><th>Feed type</th><th>Amount</th><th>Status</th></tr></thead><tbody id="impRows"></tbody></table>
+        <div class="imp-note">Feed type is resolved from your <b>Feed Schedule</b>; valid rows <b>overwrite</b> existing feed for those pond/days.</div>
+      </div>
+    </div>
+    <div class="dialog-foot">
+      <button class="btn-ghost" id="importCancel">Cancel</button>
+      <button class="btn-primary" id="importConfirm" disabled>Import</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+function sd(n){var x=Math.sin(n*12.9898)*43758.5453;return x-Math.floor(x)-0.5;}
+function r1(v){return Math.round(v*10)/10;}
+function pad(n){return String(n).padStart(2,'0');}
+var PONDS=[{id:'A',name:'Pond A',biomass:420},{id:'B',name:'Pond B',biomass:380},{id:'C',name:'Pond C',biomass:455},{id:'D',name:'Pond D',biomass:460},{id:'E',name:'Pond E',biomass:300}];
+var FEED_TYPES=[
+  {id:'ft1',name:'Starter Crumble',kg:25,price:80,active:true},
+  {id:'ft2',name:'Grower Pellet 3mm',kg:25,price:60,active:true},
+  {id:'ft3',name:'Finisher Pellet 5mm',kg:25,price:52.50,active:true}
+];
+var ftSeq=3;
+function ftById(id){return FEED_TYPES.find(function(t){return t.id===id;});}
+function ftName(id){var t=ftById(id);return t?t.name:'(removed)';}
+function ftUnitPrice(id){var t=ftById(id);return (t&&t.kg>0)?t.price/t.kg:0;}
+function activeFeedTypes(){return FEED_TYPES.filter(function(t){return t.active;});}
+var curY=2026,curM=5,TODAY=30;
+var FEED={};
+var CYCLES={
+  A:{start:'2026-06-03',end:null,         stocking:80, harvest:null},
+  B:{start:'2026-05-15',end:'2026-06-18',stocking:70, harvest:220},
+  C:{start:'2026-06-05',end:'2026-06-22',stocking:90, harvest:260},
+  D:{start:'2026-05-20',end:null,         stocking:85, harvest:null},
+  E:{start:'2026-06-02',end:null,         stocking:null, harvest:null}
+};
+function cycleBoundary(pid,key){var c=CYCLES[pid];if(!c)return null;if(c.start===key)return 'start';if(c.end===key)return 'end';return null;}
+function feedInCycle(pid){var c=CYCLES[pid];if(!c)return 0;var s=0;Object.keys(FEED).forEach(function(k){if(k>=c.start&&(!c.end||k<=c.end))(FEED[k][pid]||[]).forEach(function(e){s+=e.amount;});});return r1(s);}
+var TREATMENTS={
+  biobloc:{name:'BioBloc',color:'#0D9488'},
+  aquaguard:{name:'AquaGuard',color:'#7C3AED'}
+};
+var POND_TREATMENTS=[
+  {pond:'A',tx:'biobloc',  start:'2026-06-01',end:'2026-06-20'},
+  {pond:'A',tx:'aquaguard',start:'2026-06-12',end:'2026-06-28'},
+  {pond:'B',tx:'biobloc',  start:'2026-06-01',end:'2026-06-18'},
+  {pond:'B',tx:'aquaguard',start:'2026-06-08',end:'2026-06-16'},
+  {pond:'C',tx:'biobloc',  start:'2026-06-01',end:null},
+  {pond:'D',tx:'aquaguard',start:'2026-06-01',end:'2026-06-15'},
+  {pond:'D',tx:'biobloc',  start:'2026-06-16',end:'2026-06-30'},
+  {pond:'E',tx:'aquaguard',start:'2026-06-01',end:'2026-06-12'},
+  {pond:'E',tx:'biobloc',  start:'2026-06-13',end:null}
+];
+function fmtD(s){var p=s.split('-');return (+p[2])+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+p[1]-1];}
+function fmtRange(s,e){return e?(fmtD(s)+' – '+fmtD(e)):('since '+fmtD(s)+' (ongoing)');}
+function hexA(h,a){var n=parseInt(h.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
+function activeTreatments(pid,key){return POND_TREATMENTS.filter(function(t){return t.pond===pid&&t.start<=key&&(!t.end||key<=t.end);});}
+function clampDay(s){var p=s.split('-'),y=+p[0],m=+p[1],d=+p[2];if(y<2026||(y===2026&&m<6))return 1;if(y>2026||(y===2026&&m>6))return 30;return Math.min(30,Math.max(1,d));}
+function packLanes(items){var lanes=[];items.slice().sort(function(a,b){return a._s-b._s;}).forEach(function(it){var placed=false;for(var i=0;i<lanes.length;i++){if(lanes[i][lanes[i].length-1]._e<it._s){lanes[i].push(it);placed=true;break;}}if(!placed)lanes.push([it]);});return lanes;}
+(function gen(){
+  for(var d=1;d<=TODAY;d++){
+    var key=dk(d);FEED[key]={};
+    var tid=['ft1','ft2','ft3'][Math.min(2,Math.floor((d-1)/8))];
+    PONDS.forEach(function(p,pi){
+      var amt=r1(8+pi*1.4+d*0.12+sd(d*3+pi*5)*1.8);if(amt<2)amt=2;
+      var arr=[{amount:amt,typeId:tid}];
+      if(d%9===0&&tid!=='ft3')arr.push({amount:r1(amt*0.4),typeId:(tid==='ft1'?'ft2':'ft3')});
+      FEED[key][p.id]=arr;
+    });
+  }
+})();
+function dk(d){return curY+'-'+pad(curM+1)+'-'+pad(d);}
+function monthName(m){return ['January','February','March','April','May','June','July','August','September','October','November','December'][m];}
+/* ---------- Calendar ---------- */
+var pondFilter='all';
+function dayMarks(d){var key=dk(d),m=[];PONDS.forEach(function(p){if(pondFilter!=='all'&&p.id!==pondFilter)return;var b=cycleBoundary(p.id,key);if(b)m.push({t:b,pond:p.name});});return m;}
+function dayScoped(key){
+  var f=FEED[key];if(!f)return{kg:0,ponds:0,entries:0};
+  if(pondFilter==='all'){var kg=0,np=0,en=0;PONDS.forEach(function(p){var a=f[p.id]||[];if(a.length)np++;a.forEach(function(x){kg+=x.amount;en++;});});return{kg:r1(kg),ponds:np,entries:en};}
+  var a=f[pondFilter]||[],k=0;a.forEach(function(x){k+=x.amount;});return{kg:r1(k),ponds:a.length?1:0,entries:a.length,single:true};
+}
+function renderPills(){
+  var h='<button class="pill'+(pondFilter==='all'?' active':'')+'" data-pond="all">All ponds</button>';
+  PONDS.forEach(function(p){h+='<button class="pill'+(pondFilter===p.id?' active':'')+'" data-pond="'+p.id+'">'+p.name+'</button>';});
+  document.getElementById('pondPills').innerHTML=h;
+}
+function renderCalendar(){
+  document.getElementById('monthSel').value=curM;document.getElementById('yearSel').value=curY;
+  var first=new Date(curY,curM,1).getDay();
+  var offset=(first+6)%7;
+  var dim=new Date(curY,curM+1,0).getDate();
+  var isJune=(curY===2026&&curM===5);
+  var cells='';
+  for(var i=0;i<offset;i++)cells+='<div class="cal-cell empty-cell"></div>';
+  for(var d=1;d<=dim;d++){
+    var key=dk(d),t=dayScoped(key),future=isJune&&d>TODAY,has=t.kg>0;
+    var cls='cal-cell'+(future?' future':'')+(has?' has':'')+(isJune&&d===TODAY?' today':'');
+    var marks=isJune?dayMarks(d):[];
+    var markHtml=marks.map(function(m){return '<span class="cyc-chip '+m.t+'">'+(m.t==='start'?'🌱':'⚑')+' '+(pondFilter==='all'?m.pond.replace('Pond ','').replace(' Tank',''):(m.t==='start'?'Stocking':'Harvest'))+'</span>';}).join('');
+    var body='';
+    if(has){
+      var sub=t.single?'':(t.ponds+' pond'+(t.ponds===1?'':'s')+' fed');
+      body='<div class="cal-body"><div class="cal-kg">'+t.kg+' kg</div>'+(sub?'<div class="cal-sub">'+sub+'</div>':'')+'</div>';
+    }
+    cells+='<div class="'+cls+'"'+(future?'':' data-day="'+d+'"')+'><div class="cal-day-num">'+d+'</div>'+(markHtml?'<div class="cyc-marks">'+markHtml+'</div>':'')+body+'</div>';
+  }
+  document.getElementById('calGrid').innerHTML=cells;
+}
+/* ---------- Day modal (CRUD) ---------- */
+var modalKey=null, modalPond=null;
+function scopedPonds(){return pondFilter==='all'?PONDS:PONDS.filter(function(p){return p.id===pondFilter;});}
+function openDay(d){
+  modalKey=dk(d);
+  if(!FEED[modalKey])FEED[modalKey]={};
+  document.getElementById('modalTitle').textContent='Feeding — '+modalKey;
+  var sp=scopedPonds(),withData=sp.filter(function(p){return (FEED[modalKey][p.id]||[]).length;});
+  modalPond=(withData[0]||sp[0]).id;
+  document.querySelector('.dialog-body').classList.toggle('single-pond',sp.length===1);
+  renderModalPonds();renderModalDetail();
+  document.getElementById('dayModal').classList.add('open');
+}
+function renderModalPonds(){
+  var h='';
+  scopedPonds().forEach(function(p){
+    var a=FEED[modalKey][p.id]||[],kg=0;a.forEach(function(x){kg+=x.amount;});
+    h+='<button class="pond-item'+(modalPond===p.id?' active':'')+'" data-pp="'+p.id+'">'+
+       '<div class="pond-item-name">'+p.name+'</div>'+
+       '<div class="pond-item-meta"><span>'+r1(kg)+' kg</span></div></button>';
+  });
+  document.getElementById('modalPonds').innerHTML=h;
+}
+function renderModalDetail(){
+  var a=FEED[modalKey][modalPond]||[];
+  var pname=(PONDS.find(function(p){return p.id===modalPond;})||{}).name||'';
+  var rows=a.map(function(en,i){
+    var opts=activeFeedTypes().map(function(t){return '<option value="'+t.id+'"'+(t.id===en.typeId?' selected':'')+'>'+t.name+'</option>';}).join('');
+    return '<tr>'+
+      '<td><select data-i="'+i+'" data-k="typeId">'+opts+'</select></td>'+
+      '<td><input class="amt" type="number" step="0.1" min="0" value="'+en.amount+'" data-i="'+i+'" data-k="amount"></td>'+
+      '<td style="text-align:right"><button class="btn-del" data-del="'+i+'">Delete</button></td></tr>';
+  }).join('');
+  if(!a.length)rows='<tr><td colspan="3" class="empty-detail">No feed logged for '+pname+' on this day. Add one →</td></tr>';
+  var total=0;a.forEach(function(x){total+=x.amount;});
+  document.getElementById('modalDetail').innerHTML=
+    '<div class="detail-hdr"><h4>'+pname+' — feed entries</h4><button class="btn-add" id="addFeed">+ Add feed</button></div>'+
+    '<table class="ftable"><thead><tr><th>Feed type</th><th>Amount (kg)</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="detail-foot"><span class="daily-total">Daily total: '+r1(total)+' kg</span></div>'+
+    cycleBioBlock()+treatmentBadgeBlock();
+}
+function treatmentBadgeBlock(){
+  var act=activeTreatments(modalPond,modalKey),inner;
+  if(!act.length)inner='<span class="tx-none">No active treatment</span>';
+  else inner=act.map(function(t){var i=TREATMENTS[t.tx];return '<span class="tx-badge" style="background:'+hexA(i.color,0.12)+';color:'+i.color+';border-color:'+hexA(i.color,0.45)+'">💊 '+i.name+' · '+fmtRange(t.start,t.end)+'</span>';}).join('');
+  return '<div class="tx-block"><div class="tx-block-label">Treatment</div><div class="tx-badges">'+inner+'</div></div>';
+}
+function cycleBioBlock(){
+  var b=cycleBoundary(modalPond,modalKey);if(!b)return '';
+  var c=CYCLES[modalPond],isStart=b==='start',val=isStart?c.stocking:c.harvest;
+  return '<div class="cycle-bio '+b+'">'+
+    '<div class="cycle-bio-label">'+(isStart?'🌱 Cycle start — Stocking biomass':'⚑ Harvest — Harvest biomass')+' (kg)</div>'+
+    '<div class="cycle-bio-row"><input type="number" min="0" id="cycleBio" data-bt="'+(isStart?'stocking':'harvest')+'" placeholder="optional" value="'+(val==null?'':val)+'">'+
+    '<span class="cycle-bio-note">recorded once per cycle · optional</span></div></div>';
+}
+/* ---------- Dashboard ---------- */
+var feedChart,bioChart;
+function scopeFeedTotal(s){var t=0;Object.keys(FEED).forEach(function(k){var f=FEED[k];if(s==='all')PONDS.forEach(function(p){(f[p.id]||[]).forEach(function(e){t+=e.amount;});});else (f[s]||[]).forEach(function(e){t+=e.amount;});});return r1(t);}
+function scopeFeedCost(s){var c=0;function add(a){a.forEach(function(e){c+=e.amount*ftUnitPrice(e.typeId);});}Object.keys(FEED).forEach(function(k){var f=FEED[k];if(s==='all')PONDS.forEach(function(p){add(f[p.id]||[]);});else add(f[s]||[]);});return Math.round(c);}
+function scopeBiomass(s){
+  if(s!=='all'){var c=CYCLES[s]||{};return {stock:(c.stocking!=null?c.stocking:null),harv:(c.harvest!=null?c.harvest:null)};}
+  var st=0,hv=0,any=false;
+  PONDS.forEach(function(p){var c=CYCLES[p.id];if(c&&c.stocking!=null&&c.harvest!=null){st+=c.stocking;hv+=c.harvest;any=true;}});
+  return any?{stock:st,harv:hv}:{stock:null,harv:null};
+}
+function scopeFeedInCycle(s){
+  if(s!=='all')return feedInCycle(s);
+  var t=0;PONDS.forEach(function(p){var c=CYCLES[p.id];if(c&&c.stocking!=null&&c.harvest!=null)t+=feedInCycle(p.id);});return r1(t);
+}
+function daysLogged(s){var c=0;Object.keys(FEED).forEach(function(k){var f=FEED[k],has=false;if(s==='all')PONDS.forEach(function(p){if((f[p.id]||[]).length)has=true;});else if((f[s]||[]).length)has=true;if(has)c++;});return c;}
+function dailySeries(s){var L=[],D=[];for(var d=1;d<=TODAY;d++){var f=FEED[dk(d)]||{},sum=0;if(s==='all')PONDS.forEach(function(p){(f[p.id]||[]).forEach(function(e){sum+=e.amount;});});else (f[s]||[]).forEach(function(e){sum+=e.amount;});L.push('Jun '+d);D.push(r1(sum));}return{L:L,D:D};}
+function renderDashboard(){
+  var s=document.getElementById('dashScope').value;
+  var feed=scopeFeedTotal(s),cost=scopeFeedCost(s),dlog=daysLogged(s),avg=dlog?feed/dlog:0;
+  var bm=scopeBiomass(s);
+  var cards=[
+    {c:'feed',l:'Total Feed',v:feed,u:'kg',s:'this month'},
+    {c:'',l:'Feed Cost',v:'S$ '+cost.toLocaleString(),u:'',s:'from configured feed prices'},
+    {c:'',l:'Avg Daily Feed',v:r1(avg),u:'kg/day',s:''}
+  ];
+  document.getElementById('dashKpis').innerHTML=cards.map(function(k){
+    return '<div class="kpi '+k.c+'"><div class="kpi-label">'+k.l+'</div>'+
+      '<div class="kpi-big">'+k.v+(k.u?'<span class="kpi-unit">'+k.u+'</span>':'')+'</div>'+
+      (k.s?'<div class="kpi-sub">'+k.s+'</div>':'')+'</div>';
+  }).join('');
+  var ds=dailySeries(s);
+  if(feedChart)feedChart.destroy();
+  feedChart=new Chart(document.getElementById('feedChart'),{
+    type:'bar',
+    data:{labels:ds.L,datasets:[{label:'Feed (kg)',data:ds.D,backgroundColor:'rgba(13,148,136,0.55)',borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{maxTicksLimit:10,font:{size:9},color:'#9aa3ad'}},y:{grid:{color:'#eef1f4'},ticks:{font:{size:9},color:'#9aa3ad'}}}}
+  });
+  var cum=0,cumD=ds.D.map(function(v){cum+=v;return r1(cum);});
+  var bStart=(bm.stock!=null?bm.stock:0),bEnd=(bm.harv!=null?bm.harv:bStart);
+  var bioD=[];for(var i=0;i<TODAY;i++){var t=(TODAY>1?i/(TODAY-1):0);bioD.push(Math.round(bStart+(bEnd-bStart)*t));}
+  if(bioChart)bioChart.destroy();
+  bioChart=new Chart(document.getElementById('bioChart'),{
+    type:'line',
+    data:{labels:ds.L,datasets:[
+      {label:'Biomass',data:bioD,borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,0.08)',borderWidth:2,fill:true,tension:.3,pointRadius:0},
+      {label:'Cumulative feed',data:cumD,borderColor:'#0D9488',borderWidth:2,borderDash:[5,4],fill:false,tension:.3,pointRadius:0}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:true,labels:{font:{size:10},boxWidth:14}}},
+      scales:{x:{grid:{display:false},ticks:{maxTicksLimit:10,font:{size:9},color:'#9aa3ad'}},y:{grid:{color:'#eef1f4'},ticks:{font:{size:9},color:'#9aa3ad'}}}}
+  });
+  renderAxisInto('tlAxis');renderAxisInto('coAxis');renderTlLegend(s);
+  renderTimeline(s);renderCycles(s);
+}
+function renderAxisInto(id){
+  var ticks=[1,8,15,22,29],h='';ticks.forEach(function(d){h+='<span class="tl-tick" style="left:'+((d-1)/30*100)+'%">Jun '+d+'</span>';});
+  document.getElementById(id).innerHTML='<div class="tl-axis-spacer"></div><div class="tl-axis-ticks">'+h+'</div>';
+}
+function cycleStatus(c){return (c&&c.stocking!=null&&c.harvest!=null)?'completed':'ongoing';}
+function cycleAgg(s){
+  var ponds=(s==='all')?PONDS.map(function(p){return p.id;}):[s],fcrs=[];
+  ponds.forEach(function(pid){var c=CYCLES[pid];if(c&&c.stocking!=null&&c.harvest!=null&&c.end&&c.end>='2026-06-01'&&c.end<='2026-06-30'){var g=c.harvest-c.stocking;if(g>0)fcrs.push(feedInCycle(pid)/g);}});
+  if(!fcrs.length)return 'no completed cycles this period';
+  var avg=fcrs.reduce(function(a,b){return a+b;},0)/fcrs.length;
+  return 'Avg FCR '+avg.toFixed(2)+' · '+fcrs.length+' completed cycle'+(fcrs.length>1?'s':'')+' this period';
+}
+function renderCycles(s){
+  var ponds=(s==='all')?PONDS.map(function(p){return p.id;}):[s];
+  document.getElementById('coAgg').textContent=cycleAgg(s);
+  document.getElementById('coBody').innerHTML=ponds.map(function(pid){
+    var pname=(PONDS.find(function(p){return p.id===pid;})||{}).name,c=CYCLES[pid],bar='';
+    if(c){
+      var st=clampDay(c.start),en=c.end?clampDay(c.end):TODAY,left=(st-1)/30*100,width=(en-st+1)/30*100;
+      var done=cycleStatus(c)==='completed',color=done?'#059669':'#9ca3af';
+      var gain=done?(c.harvest-c.stocking):null,cf=feedInCycle(pid),fcr=(gain&&gain>0)?(cf/gain):null;
+      var hasStock=c.stocking!=null;
+      var label=done?('FCR '+fcr.toFixed(2)):(hasStock?'ongoing':'no data');
+      bar='<div class="co-bar '+(done?'done':'ongoing')+'" style="left:'+left+'%;width:'+width+'%;background:'+color+'">'+label+cycleCard(pname,c,done,gain,cf,fcr,hasStock)+'</div>';
+    }
+    return '<div class="co-row"><div class="co-label">'+pname+'</div><div class="co-track">'+bar+'</div></div>';
+  }).join('');
+}
+function cycleCard(pname,c,done,gain,cf,fcr,hasStock){
+  var col=done?'#059669':'#9ca3af';
+  var title=done?(pname+' · '+fmtRange(c.start,c.end)):(pname+' · since '+fmtD(c.start));
+  function row(l,v,cls){return '<div class="cc-row'+(cls?' '+cls:'')+'"><span>'+l+'</span><b>'+v+'</b></div>';}
+  var body;
+  if(done){
+    body=row('Stocking',c.stocking+' kg')+row('Harvest',c.harvest+' kg')+row('Gain',gain+' kg')+row('Cycle feed',cf+' kg')+row('FCR',fcr.toFixed(2),'cc-fcr');
+  }else if(hasStock){
+    body=row('Status','Ongoing')+row('Stocking',c.stocking+' kg')+'<div class="cc-note">Harvest &amp; FCR pending.</div>';
+  }else{
+    body=row('Status','No biomass recorded')+'<div class="cc-note">Add stocking &amp; harvest to see this cycle’s FCR.</div>';
+  }
+  return '<div class="co-card"><div class="cc-head" style="background:'+col+'">'+title+'</div><div class="cc-body">'+body+'</div></div>';
+}
+function renderTlLegend(s){
+  var ponds=(s==='all')?PONDS.map(function(p){return p.id;}):[s],present={};
+  POND_TREATMENTS.forEach(function(t){if(ponds.indexOf(t.pond)>=0)present[t.tx]=1;});
+  var keys=Object.keys(present);
+  document.getElementById('tlLegend').innerHTML=keys.length
+    ?(keys.map(function(k){var t=TREATMENTS[k];return '<span><span class="tl-dot" style="background:'+t.color+'"></span>'+t.name+'</span>';}).join('')+'<span class="tl-note">treatment periods</span>')
+    :'<span class="tl-note">no treatments in scope</span>';
+}
+function treatmentSummary(s){
+  var ponds=(s==='all')?PONDS.map(function(p){return p.id;}):[s];
+  var treated={},byTx={},pondDays=0;
+  POND_TREATMENTS.forEach(function(t){if(ponds.indexOf(t.pond)<0)return;treated[t.pond]=1;byTx[t.tx]=(byTx[t.tx]||0)+1;var sd=clampDay(t.start),ed=t.end?clampDay(t.end):TODAY;pondDays+=(ed-sd+1);});
+  var n=Object.keys(treated).length,tx=Object.keys(byTx).map(function(k){return TREATMENTS[k].name+' ×'+byTx[k];}).join(' · ');
+  return n+' of '+ponds.length+' ponds treated'+(tx?' · '+tx:'')+(pondDays?' · '+pondDays+' pond-days':'');
+}
+function renderTimeline(s){
+  var ponds=(s==='all')?PONDS.map(function(p){return p.id;}):[s];
+  document.getElementById('tlBody').innerHTML=ponds.map(function(pid){
+    var pname=(PONDS.find(function(p){return p.id===pid;})||{}).name;
+    var its=POND_TREATMENTS.filter(function(t){return t.pond===pid;}).map(function(t){return {tx:t.tx,start:t.start,end:t.end,_s:clampDay(t.start),_e:t.end?clampDay(t.end):TODAY};});
+    var lanes=its.length?packLanes(its):[[]];
+    var laneRows=lanes.map(function(lane){
+      if(!lane.length)return '<div class="tl-lane tl-empty"></div>';
+      return '<div class="tl-lane">'+lane.map(function(it){var i=TREATMENTS[it.tx];var left=(it._s-1)/30*100,width=(it._e-it._s+1)/30*100;return '<div class="tl-bar" style="left:'+left+'%;width:'+width+'%;background:'+i.color+'" title="'+i.name+' · '+fmtRange(it.start,it.end)+'">'+i.name+'</div>';}).join('')+'</div>';
+    }).join('');
+    return '<div class="tl-row"><div class="tl-label">'+pname+'</div><div class="tl-track">'+laneRows+'</div></div>';
+  }).join('');
+}
+/* ---------- Configuration (feed types) ---------- */
+function renderConfig(){
+  document.getElementById('cfgBody').innerHTML=FEED_TYPES.map(function(t,i){
+    return '<tr>'+
+      '<td><input type="text" class="cfg-name" value="'+t.name+'" data-ci="'+i+'" data-ck="name"></td>'+
+      '<td><input type="number" step="0.5" min="0" class="cfg-num" value="'+t.kg+'" data-ci="'+i+'" data-ck="kg"></td>'+
+      '<td><input type="number" step="0.5" min="0" class="cfg-num" value="'+t.price+'" data-ci="'+i+'" data-ck="price"></td>'+
+      '<td><label class="switch"><input type="checkbox" '+(t.active?'checked':'')+' data-ci="'+i+'" data-ck="active"> '+(t.active?'Active':'Inactive')+'</label></td>'+
+      '<td style="text-align:right"><button class="btn-del" data-cdel="'+i+'">Delete</button></td></tr>';
+  }).join('');
+}
+/* ---------- Wiring ---------- */
+document.querySelectorAll('.tab').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
+    this.classList.add('active');
+    var t=this.dataset.tab;
+    document.getElementById('tab-calendar').classList.toggle('active',t==='calendar');
+    document.getElementById('tab-dashboard').classList.toggle('active',t==='dashboard');
+    document.getElementById('tab-config').classList.toggle('active',t==='config');
+    if(t==='dashboard')renderDashboard();
+    if(t==='config')renderConfig();
+  });
+});
+document.getElementById('pondPills').addEventListener('click',function(e){var b=e.target.closest('.pill');if(!b)return;pondFilter=b.dataset.pond;renderPills();renderCalendar();});
+document.getElementById('prevMonth').addEventListener('click',function(){curM--;if(curM<0){curM=11;curY--;}renderCalendar();});
+document.getElementById('nextMonth').addEventListener('click',function(){curM++;if(curM>11){curM=0;curY++;}renderCalendar();});
+document.getElementById('calGrid').addEventListener('click',function(e){var c=e.target.closest('[data-day]');if(!c)return;openDay(+c.dataset.day);});
+document.getElementById('modalPonds').addEventListener('click',function(e){var b=e.target.closest('[data-pp]');if(!b)return;modalPond=b.dataset.pp;renderModalPonds();renderModalDetail();});
+document.getElementById('modalDetail').addEventListener('click',function(e){
+  if(e.target.id==='addFeed'){FEED[modalKey][modalPond]=FEED[modalKey][modalPond]||[];FEED[modalKey][modalPond].push({amount:1,typeId:(activeFeedTypes()[0]||{}).id});renderModalDetail();renderModalPonds();return;}
+  var del=e.target.closest('[data-del]');if(del){FEED[modalKey][modalPond].splice(+del.dataset.del,1);renderModalDetail();renderModalPonds();}
+});
+document.getElementById('modalDetail').addEventListener('input',function(e){
+  var el=e.target;
+  if(el.id==='cycleBio'){var c=CYCLES[modalPond];if(c)c[el.dataset.bt]=(el.value===''?null:(parseFloat(el.value)||0));return;}
+  if(el.dataset.i!==undefined){var en=FEED[modalKey][modalPond][+el.dataset.i];var k=el.dataset.k;en[k]=(k==='amount')?(parseFloat(el.value)||0):el.value;
+    if(k==='amount'){var t=0;FEED[modalKey][modalPond].forEach(function(x){t+=x.amount;});var f=document.querySelector('.daily-total');if(f)f.textContent='Daily total: '+r1(t)+' kg';renderModalPonds();}
+  }
+});
+function closeModal(){document.getElementById('dayModal').classList.remove('open');renderCalendar();}
+document.getElementById('modalClose').addEventListener('click',closeModal);
+document.getElementById('modalCancel').addEventListener('click',closeModal);
+document.getElementById('modalSave').addEventListener('click',closeModal);
+document.getElementById('dayModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.getElementById('dashScope').addEventListener('change',renderDashboard);
+document.getElementById('addFeedType').addEventListener('click',function(){FEED_TYPES.push({id:'ft'+(++ftSeq),name:'New feed type',kg:25,price:0,active:true});renderConfig();});
+document.getElementById('cfgBody').addEventListener('input',function(e){var el=e.target;if(el.dataset.ci===undefined||el.dataset.ck==='active')return;var t=FEED_TYPES[+el.dataset.ci],k=el.dataset.ck;t[k]=(k==='price'||k==='kg')?(parseFloat(el.value)||0):el.value;});
+document.getElementById('cfgBody').addEventListener('change',function(e){if(e.target.dataset.ck==='active'){FEED_TYPES[+e.target.dataset.ci].active=e.target.checked;renderConfig();}});
+document.getElementById('cfgBody').addEventListener('click',function(e){var d=e.target.closest('[data-cdel]');if(d){FEED_TYPES.splice(+d.dataset.cdel,1);renderConfig();}});
+document.getElementById('monthSel').addEventListener('change',function(){curM=+this.value;renderCalendar();});
+document.getElementById('yearSel').addEventListener('change',function(){curY=+this.value;renderCalendar();});
+function openImport(){document.getElementById('importModal').classList.add('open');}
+function closeImport(){document.getElementById('importModal').classList.remove('open');document.getElementById('impStep3').style.display='none';var b=document.getElementById('importConfirm');b.disabled=true;b.textContent='Import';document.getElementById('dlTemplate').textContent='⬇ Download template (.xlsx)';}
+document.getElementById('importBtn').addEventListener('click',openImport);
+document.getElementById('importClose').addEventListener('click',closeImport);
+document.getElementById('importCancel').addEventListener('click',closeImport);
+document.getElementById('importConfirm').addEventListener('click',closeImport);
+document.getElementById('importModal').addEventListener('click',function(e){if(e.target===this)closeImport();});
+document.getElementById('dlTemplate').addEventListener('click',function(){this.textContent='✓ Template downloaded';});
+document.getElementById('impDrop').addEventListener('click',function(){
+  var sample=[
+    {d:'2026-06-01',p:'Pond A',f:'Starter Crumble',a:'8.2',ok:true},
+    {d:'2026-06-01',p:'Pond B',f:'Starter Crumble',a:'10.3',ok:true},
+    {d:'2026-06-12',p:'Pond A',f:'Grower Pellet 3mm',a:'9.4',ok:true},
+    {d:'2026-06-05',p:'Pond Z',f:'—',a:'7.0',ok:false,e:'unknown pond'},
+    {d:'2026-06-08',p:'Pond C',f:'Starter Crumble',a:'-3.0',ok:false,e:'negative amount'}
+  ];
+  document.getElementById('impSummary').textContent='150 entries · 5 ponds · 1–30 Jun · 2 issues — 148 will import (overwrites existing).';
+  document.getElementById('impRows').innerHTML=sample.map(function(r){
+    var status=r.ok?'<span class="st-ok">✓ ok</span>':'<span class="st-err">✕ '+r.e+'</span>';
+    return '<tr'+(r.ok?'':' class="bad"')+'><td>'+r.d+'</td><td class="name">'+r.p+'</td><td>'+r.f+'</td><td>'+r.a+'</td><td>'+status+'</td></tr>';
+  }).join('');
+  document.getElementById('impStep3').style.display='block';
+  var btn=document.getElementById('importConfirm');btn.disabled=false;btn.textContent='Import 148 valid rows';
+});
+(function(){
+  document.getElementById('dashScope').innerHTML='<option value="all">All ponds (project)</option>'+PONDS.map(function(p){return '<option value="'+p.id+'">'+p.name+'</option>';}).join('');
+  var msel=document.getElementById('monthSel');for(var mi=0;mi<12;mi++)msel.innerHTML+='<option value="'+mi+'">'+monthName(mi)+'</option>';
+  var ysel=document.getElementById('yearSel');for(var yy=2024;yy<=2028;yy++)ysel.innerHTML+='<option value="'+yy+'">'+yy+'</option>';
+  renderPills();renderCalendar();
+})();
+</script>
+</body>
+</html>
